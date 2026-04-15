@@ -28,6 +28,23 @@ const API = {
   delete: (path)       => API.request('DELETE', path),
 };
 
+// ─── PWA Install prompt ───────────────────────────────────────────────────────
+let _deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  _deferredInstallPrompt = e;
+  document.querySelectorAll('.btn-pwa-install').forEach(b => b.classList.add('visible'));
+});
+window.installPWA = async () => {
+  if (!_deferredInstallPrompt) return;
+  _deferredInstallPrompt.prompt();
+  const { outcome } = await _deferredInstallPrompt.userChoice;
+  if (outcome === 'accepted') {
+    _deferredInstallPrompt = null;
+    document.querySelectorAll('.btn-pwa-install').forEach(b => b.classList.remove('visible'));
+  }
+};
+
 // ─── App State ────────────────────────────────────────────────────────────────
 const App = {
   state: {
@@ -151,6 +168,11 @@ function landingHTML() {
                 Voir les fonctionnalités
               </button>
             </div>
+            <div style="margin-top:1rem">
+              <button class="btn-pwa-install${_deferredInstallPrompt ? ' visible' : ''}" onclick="installPWA()">
+                <span>📲</span> Installer l'app
+              </button>
+            </div>
             <div class="hero-stats">
               <div class="hero-stat">
                 <div class="hero-stat-value text-gold">3 jours</div>
@@ -167,44 +189,52 @@ function landingHTML() {
             </div>
           </div>
 
-          <!-- Right: dashboard mockup -->
+          <!-- Right: phone mockup -->
           <div class="hero-right">
-            <div class="dashboard-preview" role="img" aria-label="Aperçu du tableau de bord Tala">
-              <div class="preview-roas-badge">✓ ROAS 3.2x</div>
-              <div class="preview-header">
-                <span class="preview-header-title">Tableau de bord</span>
-                <span class="preview-period">30 derniers jours</span>
-              </div>
-              <div class="preview-metrics">
-                <div class="preview-metric">
-                  <div class="preview-metric-label">Bénéfice net</div>
-                  <div class="preview-metric-val profit">+485 000 F</div>
+            <div class="phone-mockup">
+              <div class="phone-mockup-frame">
+                <div class="phone-mockup-notch"></div>
+                <div class="phone-mockup-screen">
+                  <div class="dashboard-preview" role="img" aria-label="Aperçu du tableau de bord Tala">
+                    <div class="preview-roas-badge">✓ ROAS 3.2×</div>
+                    <div class="preview-header">
+                      <span class="preview-header-title">Dashboard</span>
+                      <span class="preview-period">30j</span>
+                    </div>
+                    <div class="preview-metrics">
+                      <div class="preview-metric">
+                        <div class="preview-metric-label">Bénéfice net</div>
+                        <div class="preview-metric-val profit">+485 000 F</div>
+                      </div>
+                      <div class="preview-metric">
+                        <div class="preview-metric-label">ROAS</div>
+                        <div class="preview-metric-val roas">3.2×</div>
+                      </div>
+                      <div class="preview-metric">
+                        <div class="preview-metric-label">Revenus</div>
+                        <div class="preview-metric-val rev">750 000 F</div>
+                      </div>
+                      <div class="preview-metric">
+                        <div class="preview-metric-label">Meta Ads</div>
+                        <div class="preview-metric-val spend">−234 000 F</div>
+                      </div>
+                    </div>
+                    <div class="preview-chart">
+                      ${[55,70,45,80,65,90,75,85,60,95,70,80,88,72,95].map(h => `
+                        <div class="preview-bar rev" style="height:${h}%"></div>
+                      `).join('')}
+                    </div>
+                    <div class="preview-legend">
+                      <div class="preview-legend-item">
+                        <div class="preview-legend-dot" style="background:var(--gold)"></div>Revenus
+                      </div>
+                      <div class="preview-legend-item">
+                        <div class="preview-legend-dot" style="background:var(--danger);opacity:.5"></div>Meta
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="preview-metric">
-                  <div class="preview-metric-label">ROAS Tala</div>
-                  <div class="preview-metric-val roas">3.2×</div>
-                </div>
-                <div class="preview-metric">
-                  <div class="preview-metric-label">Revenus</div>
-                  <div class="preview-metric-val rev">750 000 F</div>
-                </div>
-                <div class="preview-metric">
-                  <div class="preview-metric-label">Dép. Meta</div>
-                  <div class="preview-metric-val spend">−234 000 F</div>
-                </div>
-              </div>
-              <div class="preview-chart">
-                ${[55,70,45,80,65,90,75,85,60,95,70,80,88,72,95].map((h, i) => `
-                  <div class="preview-bar rev" style="height:${h}%"></div>
-                `).join('')}
-              </div>
-              <div class="preview-legend">
-                <div class="preview-legend-item">
-                  <div class="preview-legend-dot" style="background:var(--gold)"></div>Revenus
-                </div>
-                <div class="preview-legend-item">
-                  <div class="preview-legend-dot" style="background:var(--danger);opacity:.5"></div>Pub Meta
-                </div>
+                <div class="phone-mockup-home-bar"></div>
               </div>
             </div>
           </div>
@@ -581,10 +611,17 @@ async function renderAdminPage() {
 
 // ─── App Shell (nav + content) ────────────────────────────────────────────────
 function renderAppShell(activeNav, content) {
-  const u = App.state.user;
+  const u   = App.state.user;
+  const sub = App.state.subscription;
   const initials = u?.name?.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?';
 
-  const navItems = [
+  // Subscription badge
+  let badgeClass = 'trial', badgeLabel = 'Essai';
+  if (sub?.plan === 'premium' && sub?.status === 'active') { badgeClass = 'premium'; badgeLabel = 'Premium'; }
+  else if (sub?.status === 'expired') { badgeClass = 'expired'; badgeLabel = 'Expiré'; }
+
+  // Desktop sidebar (all pages)
+  const allNavItems = [
     { id: 'dashboard',     icon: '📊', label: 'Tableau de bord' },
     { id: 'products',      icon: '📦', label: 'Produits' },
     { id: 'coach',         icon: '🤖', label: 'Coach IA' },
@@ -593,24 +630,30 @@ function renderAppShell(activeNav, content) {
     { id: 'settings',      icon: '⚙️',  label: 'Paramètres' },
   ];
 
-  const sideNav = navItems.map(n => `
+  // Mobile bottom nav — 4 tabs
+  const mobileNavItems = [
+    { id: 'dashboard',     icon: '📊', label: 'Dashboard' },
+    { id: 'coach',         icon: '🤖', label: 'Coach' },
+    { id: 'subscriptions', icon: '🔧', label: 'Outils' },
+    { id: 'settings',      icon: '⚙️',  label: 'Réglages' },
+  ];
+
+  const sideNav = allNavItems.map(n => `
     <div class="nav-item ${activeNav === n.id ? 'active' : ''}" onclick="navigate('${n.id}')">
-      <span class="nav-icon">${n.icon}</span>
-      ${n.label}
+      <span class="nav-icon">${n.icon}</span>${n.label}
     </div>
   `).join('');
 
-  const bottomNav = navItems.slice(0, 5).map(n => `
+  const bottomNavHTML = mobileNavItems.map(n => `
     <div class="bottom-nav-item ${activeNav === n.id ? 'active' : ''}" onclick="navigate('${n.id}')">
-      <span class="nav-icon">${n.icon}</span>
-      ${n.label.split(' ')[0]}
+      <span class="nav-icon">${n.icon}</span>${n.label}
     </div>
   `).join('');
 
   document.getElementById('app').innerHTML = `
     <div class="app-layout">
 
-      <!-- Sidebar (desktop) -->
+      <!-- Sidebar (desktop only) -->
       <aside class="sidebar">
         <div class="sidebar-logo">
           <div class="logo-mark">T</div>
@@ -622,7 +665,7 @@ function renderAppShell(activeNav, content) {
             <div class="user-avatar">${initials}</div>
             <div class="user-info">
               <div class="user-name">${u?.name || ''}</div>
-              <div class="user-plan">${App.state.subscription?.plan || 'trial'}</div>
+              <div class="user-plan">${sub?.plan || 'trial'}</div>
             </div>
           </div>
         </div>
@@ -630,22 +673,30 @@ function renderAppShell(activeNav, content) {
 
       <!-- Main -->
       <main class="main-content">
-        <!-- Topbar (mobile) -->
-        <div class="topbar">
+
+        <!-- Mobile header (56px) -->
+        <header class="mobile-header">
           <div class="navbar-logo">
             <div class="logo-mark" style="width:32px;height:32px;font-size:1rem;border-radius:9px">T</div>
-            <span class="logo-name" style="font-size:1.25rem">Tala</span>
+            <span class="logo-name" style="font-size:1.125rem">Tala</span>
           </div>
-          <div class="user-avatar" onclick="navigate('settings')">${initials}</div>
+          <span class="sub-badge ${badgeClass}">${badgeLabel}</span>
+        </header>
+
+        <!-- Topbar (desktop only) -->
+        <div class="topbar">
+          <div class="user-avatar" onclick="navigate('settings')" style="cursor:pointer" title="${u?.name || ''}">${initials}</div>
         </div>
 
-        <!-- Page content -->
-        ${content}
+        <!-- Scrollable content -->
+        <div class="page-scroll">
+          ${content}
+        </div>
 
-        <!-- Bottom nav (mobile) -->
-        <nav class="bottom-nav">${bottomNav}</nav>
+        <!-- Bottom nav (mobile, 4 tabs) -->
+        <nav class="bottom-nav">${bottomNavHTML}</nav>
+
       </main>
-
     </div>
   `;
 }

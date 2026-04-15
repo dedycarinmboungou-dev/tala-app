@@ -6,6 +6,7 @@ const STATIC_ASSETS = [
   '/js/auth.js',
   '/js/onboarding.js',
   '/js/dashboard.js',
+  '/js/settings.js',
   '/manifest.json',
   'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap',
 ];

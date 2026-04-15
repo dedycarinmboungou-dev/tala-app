@@ -16,47 +16,50 @@ const Dashboard = {
   _shellHTML() {
     return `
       <div class="page-content">
-        <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem">
-          <div>
-            <h1 class="page-title">Tableau de bord</h1>
-            <p class="page-sub">Ton vrai bénéfice net, en temps réel.</p>
+        <div class="page-header">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem">
+            <div>
+              <h1 class="page-title">Dashboard</h1>
+              <p class="page-sub">Ton vrai bénéfice net, en temps réel.</p>
+            </div>
+            <!-- PDF button — desktop only -->
+            <button class="btn btn-secondary btn-sm desktop-only" id="pdf-btn-desktop"
+                    onclick="Dashboard.downloadPDF()"
+                    title="Télécharger le rapport PDF"
+                    >📄 Rapport PDF</button>
           </div>
-          <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+          <div style="margin-top:.75rem">
             <div class="period-tabs">
               <div class="period-tab ${Dashboard.period === 7  ? 'active' : ''}" onclick="Dashboard.setPeriod(7)">7j</div>
               <div class="period-tab ${Dashboard.period === 30 ? 'active' : ''}" onclick="Dashboard.setPeriod(30)">30j</div>
               <div class="period-tab ${Dashboard.period === 90 ? 'active' : ''}" onclick="Dashboard.setPeriod(90)">90j</div>
             </div>
-            <button class="btn btn-secondary btn-sm" onclick="Dashboard.downloadPDF()" id="pdf-btn"
-                    title="Télécharger le rapport PDF">
-              📄 Rapport PDF
-            </button>
           </div>
         </div>
 
         <!-- Metrics skeleton -->
         <div class="metrics-grid" id="metrics-grid">
-          ${Array(6).fill(0).map(() => `
-            <div class="metric-card">
+          ${Array(6).fill(0).map((_, i) => `
+            <div class="metric-card${i === 4 ? ' full-span' : ''}">
               <div class="skeleton" style="height:.75rem;width:60%;margin-bottom:.75rem;border-radius:4px"></div>
               <div class="skeleton" style="height:1.75rem;width:80%;border-radius:4px"></div>
             </div>
           `).join('')}
         </div>
 
-        <!-- ROAS alert placeholder -->
+        <!-- ROAS alert -->
         <div id="roas-alert"></div>
 
         <!-- Chart -->
         <div class="chart-container" id="chart-container">
           <div class="chart-header">
-            <span class="chart-title">Revenus vs Dépenses pub</span>
-            <div style="display:flex;gap:1rem">
-              <div style="display:flex;align-items:center;gap:.375rem;font-size:.8125rem;color:var(--gray-400)">
-                <div style="width:10px;height:10px;background:var(--gold);border-radius:2px"></div>Revenus
+            <span class="chart-title">Revenus vs Dépenses</span>
+            <div style="display:flex;gap:.75rem">
+              <div style="display:flex;align-items:center;gap:.375rem;font-size:.75rem;color:var(--gray-400)">
+                <div style="width:8px;height:8px;background:var(--gold);border-radius:2px"></div>Revenus
               </div>
-              <div style="display:flex;align-items:center;gap:.375rem;font-size:.8125rem;color:var(--gray-400)">
-                <div style="width:10px;height:10px;background:var(--danger);opacity:.5;border-radius:2px"></div>Meta Ads
+              <div style="display:flex;align-items:center;gap:.375rem;font-size:.75rem;color:var(--gray-400)">
+                <div style="width:8px;height:8px;background:var(--danger);opacity:.5;border-radius:2px"></div>Meta
               </div>
             </div>
           </div>
@@ -69,8 +72,10 @@ const Dashboard = {
 
         <!-- Connections warning -->
         <div id="connections-warning"></div>
-
       </div>
+
+      <!-- FAB: PDF report (mobile only) -->
+      <button class="fab" id="pdf-btn" onclick="Dashboard.downloadPDF()" title="Rapport PDF" aria-label="Télécharger le rapport PDF">📄</button>
     `;
   },
 
@@ -80,8 +85,10 @@ const Dashboard = {
   },
 
   async downloadPDF() {
-    const btn = document.getElementById('pdf-btn');
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ Génération...'; }
+    const btn     = document.getElementById('pdf-btn');
+    const btnDesk = document.getElementById('pdf-btn-desktop');
+    if (btn)     { btn.disabled = true;     btn.textContent = '⏳'; }
+    if (btnDesk) { btnDesk.disabled = true; btnDesk.textContent = '⏳ Génération...'; }
 
     try {
       const token = localStorage.getItem('tala_token');
@@ -108,7 +115,8 @@ const Dashboard = {
     } catch (err) {
       Toast.error(err.message || 'Impossible de générer le rapport.');
     } finally {
-      if (btn) { btn.disabled = false; btn.textContent = '📄 Rapport PDF'; }
+      if (btn)     { btn.disabled = false;     btn.textContent = '📄'; }
+      if (btnDesk) { btnDesk.disabled = false; btnDesk.textContent = '📄 Rapport PDF'; }
     }
   },
 
@@ -169,7 +177,7 @@ const Dashboard = {
         <div class="metric-value" style="color:var(--warning)">${noConn ? '—' : '−' + formatXOF(d.tool_subs)}</div>
         <div class="metric-change">Ce mois-ci</div>
       </div>
-      <div class="metric-card card-gold" style="grid-column:span 1">
+      <div class="metric-card card-gold full-span">
         <div class="metric-label">Bénéfice Net Réel</div>
         <div class="metric-value ${d.net_profit >= 0 ? 'success' : 'danger'}">${noConn ? '—' : formatXOF(d.net_profit)}</div>
         <div class="metric-change ${d.net_profit >= 0 ? 'up' : 'down'}">${d.net_profit >= 0 ? '↑ Tu es dans le vert' : '↓ Tu perds de l\'argent'}</div>

@@ -153,8 +153,9 @@ const Dashboard = {
 
   _renderMetrics(d) {
     const noConn = !App.state.connections?.chariow;
+    const noMeta = !App.state.connections?.meta;
     const roas = d.roas || 0;
-    const roasColor = roas === 0 ? 'var(--gray-400)' : roas >= 2 ? 'var(--success)' : roas >= 1 ? 'var(--warning)' : 'var(--danger)';
+    const roasColor = (noConn || noMeta || roas === 0) ? 'var(--gray-400)' : roas >= 2 ? 'var(--success)' : roas >= 1 ? 'var(--warning)' : 'var(--danger)';
 
     document.getElementById('metrics-grid').innerHTML = `
       <div class="metric-card">
@@ -185,7 +186,7 @@ const Dashboard = {
       <div class="metric-card">
         <div class="metric-label">ROAS Tala</div>
         <div class="metric-value" style="color:${roasColor}; font-size:1.75rem">
-          ${noConn ? '—' : roas > 0 ? roas.toFixed(2) + '×' : '0×'}
+          ${(noConn || noMeta) ? '—' : roas > 0 ? roas.toFixed(2) + '×' : '0×'}
         </div>
         <div class="metric-change">Fiable, calculé en XOF</div>
       </div>

@@ -19,7 +19,7 @@ const FEDAPAY_BASE = (process.env.FEDAPAY_ENV === 'live')
   ? 'https://api.fedapay.com/v1'
   : 'https://sandbox-api.fedapay.com/v1';
 
-const TALA_MONTHLY_PRICE_XOF = 3_000;
+const TALA_MONTHLY_PRICE_XOF = 9_900;
 const TALA_PLAN_LABEL        = 'Tala Premium — Accès mensuel';
 
 // ─── Helper : appel FedaPay ───────────────────────────────────────────────────

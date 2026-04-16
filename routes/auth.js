@@ -116,7 +116,7 @@ router.post('/login', async (req, res) => {
 
 // ─── GET /api/auth/me ─────────────────────────────────────────────────────────
 router.get('/me', requireAuth, (req, res) => {
-  const subscription = db.prepare(`
+  const rawSub = db.prepare(`
     SELECT plan, status, started_at, expires_at
     FROM subscriptions
     WHERE user_id = ?
@@ -131,9 +131,26 @@ router.get('/me', requireAuth, (req, res) => {
     SELECT ad_account_name, connected_at FROM meta_connections WHERE user_id = ?
   `).get(req.user.id);
 
+  // ── Enrichir la subscription avec is_active + days_remaining ────────────────
+  let subscription = null;
+  if (rawSub) {
+    const now       = new Date();
+    const expiresAt = rawSub.expires_at ? new Date(rawSub.expires_at) : null;
+    const isExpired = expiresAt ? expiresAt < now : false;
+    const isActive  = !isExpired && (rawSub.status === 'active' || rawSub.status === 'cancelled_pending');
+    const msLeft    = expiresAt && !isExpired ? expiresAt - now : 0;
+    const daysRemaining = msLeft > 0 ? Math.ceil(msLeft / 86_400_000) : 0;
+
+    subscription = {
+      ...rawSub,
+      is_active:     isActive,
+      days_remaining: daysRemaining,
+    };
+  }
+
   res.json({
     user: req.user,
-    subscription: subscription || null,
+    subscription,
     connections: { chariow: chariow || null, meta: meta || null },
   });
 });

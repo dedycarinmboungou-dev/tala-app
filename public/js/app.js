@@ -324,7 +324,7 @@ function landingHTML() {
     </section>
 
     <!-- HOW IT WORKS -->
-    <section class="section" style="background:var(--black-2);border-top:1px solid var(--black-5);border-bottom:1px solid var(--black-5)">
+    <section class="section section-alt">
       <div class="container">
         <div class="text-center mb-6">
           <span class="section-tag">Comment ça marche</span>

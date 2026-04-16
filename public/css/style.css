@@ -102,6 +102,11 @@ h4 { font-size: 1.125rem; font-weight: 600; }
 
 .section { padding: 5rem 0; }
 .section-sm { padding: 3rem 0; }
+.section-alt {
+  background: var(--black-2);
+  border-top: 1px solid var(--black-5);
+  border-bottom: 1px solid var(--black-5);
+}
 
 /* ─── Buttons ─────────────────────────────────────────────────────────────────── */
 .btn {
@@ -1461,11 +1466,10 @@ body.theme-light .feature-card:hover {
 body.theme-light .feature-card p { color: #64748B; }
 
 /* ── How it works section ──────────────────────────────────────────────────── */
-body.theme-light .section[style*="background:var(--black-2)"],
-body.theme-light [style*="background:var(--black-2)"] {
-  background: #F1F5F9 !important;
-  border-top: 1px solid #E2E8F0 !important;
-  border-bottom: 1px solid #E2E8F0 !important;
+body.theme-light .section-alt {
+  background: #F1F5F9;
+  border-top: 1px solid #E2E8F0;
+  border-bottom: 1px solid #E2E8F0;
 }
 body.theme-light .step-card {
   background: #FFFFFF;

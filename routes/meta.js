@@ -177,7 +177,7 @@ router.get('/oauth/callback', async (req, res) => {
       window.opener.postMessage({ type: 'META_AUTH_SUCCESS' }, '*');
       setTimeout(() => window.close(), 1500);
     } else {
-      setTimeout(() => window.location.href = '/#onboarding', 1500);
+      setTimeout(() => window.location.href = '/', 1500);
     }
   </script>
 </body>

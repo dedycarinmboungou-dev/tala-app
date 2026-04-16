@@ -33,7 +33,7 @@ function requireAuth(req, res, next) {
 function requirePremium(req, res, next) {
   const sub = db.prepare(`
     SELECT * FROM subscriptions
-    WHERE user_id = ? AND status = 'active' AND expires_at > datetime('now')
+    WHERE user_id = ? AND status IN ('active', 'cancelled_pending') AND expires_at > datetime('now')
     ORDER BY created_at DESC LIMIT 1
   `).get(req.user.id);
 

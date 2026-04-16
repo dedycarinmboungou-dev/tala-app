@@ -145,7 +145,7 @@ const App = {
   // ── Écran auth mobile (PWA installée / standalone) ─────────────────────────
   renderAuthScreen() {
     App.state.currentView = 'auth';
-    document.body.classList.remove('theme-light');
+    document.body.classList.add('theme-light');
     document.getElementById('app').innerHTML = `
       <div class="mobile-auth-screen">
         <div class="mobile-auth-inner">

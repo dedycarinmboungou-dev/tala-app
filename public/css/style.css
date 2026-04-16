@@ -1630,5 +1630,21 @@ body.theme-light .modal .divider-text::after { background: #E2E8F0; }
   color: var(--black);
 }
 
+/* ─── Mobile auth screen – light theme overrides ─────────────────────────────── */
+body.theme-light .mobile-auth-screen {
+  background: #F8FAFC;
+}
+body.theme-light .mobile-auth-tabs {
+  background: #E2E8F0;
+  border-color: #CBD5E1;
+}
+body.theme-light .mobile-auth-tab {
+  color: #64748B;
+}
+body.theme-light .mobile-auth-tab.active {
+  background: var(--gold-dark);
+  color: #FFFFFF;
+}
+
 /* ─── Selection ──────────────────────────────────────────────────────────────── */
 ::selection { background: rgba(245,197,24,0.25); color: var(--white); }

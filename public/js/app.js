@@ -80,7 +80,16 @@ const App = {
         else App.renderLanding();
       }
     } else {
-      App.renderLanding();
+      // Mode PWA installée (standalone) ou mobile → écran auth direct, sans landing page marketing
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                        || window.navigator.standalone === true;
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      if (isStandalone || isMobile) {
+        App.renderAuthScreen();
+      } else {
+        App.renderLanding();
+      }
     }
   },
 
@@ -132,7 +141,144 @@ const App = {
     document.getElementById('app').innerHTML = landingHTML();
     bindLandingEvents();
   },
+
+  // ── Écran auth mobile (PWA installée / standalone) ─────────────────────────
+  renderAuthScreen() {
+    App.state.currentView = 'auth';
+    document.body.classList.remove('theme-light');
+    document.getElementById('app').innerHTML = `
+      <div class="mobile-auth-screen">
+        <div class="mobile-auth-inner">
+          <div class="auth-logo" style="justify-content:center;margin-bottom:2.5rem">
+            <div class="logo-mark" style="width:56px;height:56px;font-size:1.75rem;border-radius:18px">T</div>
+            <span class="logo-name" style="font-size:1.75rem">Tala</span>
+          </div>
+
+          <div class="mobile-auth-tabs">
+            <button class="mobile-auth-tab active" id="tab-login">Se connecter</button>
+            <button class="mobile-auth-tab" id="tab-register">S'inscrire</button>
+          </div>
+
+          <!-- LOGIN -->
+          <div id="auth-panel-login">
+            <form id="mobile-login-form" novalidate style="margin-top:1.5rem">
+              <div class="form-group">
+                <label class="form-label" for="m-login-email">Adresse email</label>
+                <input type="email" id="m-login-email" class="form-input" placeholder="toi@exemple.com" autocomplete="email" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="m-login-password">Mot de passe</label>
+                <div class="api-key-input-wrap">
+                  <input type="password" id="m-login-password" class="form-input" placeholder="••••••••" autocomplete="current-password" required>
+                  <button type="button" id="m-toggle-login" class="api-key-toggle" aria-label="Afficher">👁</button>
+                </div>
+              </div>
+              <div id="m-login-error" class="form-hint error hidden"></div>
+              <button type="submit" class="btn btn-primary btn-block mt-4" id="m-login-btn">Se connecter</button>
+            </form>
+          </div>
+
+          <!-- REGISTER -->
+          <div id="auth-panel-register" class="hidden">
+            <form id="mobile-register-form" novalidate style="margin-top:1.5rem">
+              <div class="form-group">
+                <label class="form-label" for="m-reg-name">Prénom / Nom</label>
+                <input type="text" id="m-reg-name" class="form-input" placeholder="ex: Kouassi Yao" autocomplete="name" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="m-reg-email">Adresse email</label>
+                <input type="email" id="m-reg-email" class="form-input" placeholder="toi@exemple.com" autocomplete="email" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="m-reg-password">Mot de passe</label>
+                <div class="api-key-input-wrap">
+                  <input type="password" id="m-reg-password" class="form-input" placeholder="8 caractères min." autocomplete="new-password" required minlength="8">
+                  <button type="button" id="m-toggle-reg" class="api-key-toggle" aria-label="Afficher">👁</button>
+                </div>
+                <p class="form-hint">Au moins 8 caractères.</p>
+              </div>
+              <div id="m-register-error" class="form-hint error hidden"></div>
+              <button type="submit" class="btn btn-primary btn-block mt-4" id="m-register-btn">Créer mon compte →</button>
+            </form>
+          </div>
+
+          <p style="font-size:.75rem;color:var(--gray-500);text-align:center;margin-top:1.25rem;line-height:1.5">
+            3 jours d'essai gratuit · Aucune carte requise
+          </p>
+        </div>
+      </div>
+    `;
+
+    // ── Tabs ────────────────────────────────────────────────────────────────
+    const tabLogin    = document.getElementById('tab-login');
+    const tabRegister = document.getElementById('tab-register');
+    const panelLogin  = document.getElementById('auth-panel-login');
+    const panelReg    = document.getElementById('auth-panel-register');
+
+    tabLogin.addEventListener('click', () => {
+      tabLogin.classList.add('active');    tabRegister.classList.remove('active');
+      panelLogin.classList.remove('hidden'); panelReg.classList.add('hidden');
+    });
+    tabRegister.addEventListener('click', () => {
+      tabRegister.classList.add('active'); tabLogin.classList.remove('active');
+      panelReg.classList.remove('hidden'); panelLogin.classList.add('hidden');
+    });
+
+    // ── Toggle passwords ────────────────────────────────────────────────────
+    document.getElementById('m-toggle-login')?.addEventListener('click', function () {
+      Auth.togglePassword('m-login-password', this);
+    });
+    document.getElementById('m-toggle-reg')?.addEventListener('click', function () {
+      Auth.togglePassword('m-reg-password', this);
+    });
+
+    // ── Login form ──────────────────────────────────────────────────────────
+    document.getElementById('mobile-login-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email    = document.getElementById('m-login-email')?.value.trim();
+      const password = document.getElementById('m-login-password')?.value;
+      const btn      = document.getElementById('m-login-btn');
+      const errEl    = document.getElementById('m-login-error');
+      Auth._setError(errEl, '');
+      Auth._setLoading(btn, true, 'Connexion...');
+      try {
+        const { token, user } = await API.post('/api/auth/login', { email, password });
+        App.setAuth(token, user);
+        Toast.success(`Bon retour ${user.name} !`);
+      } catch (err) {
+        Auth._setError(errEl, err.message);
+      } finally {
+        Auth._setLoading(btn, false, 'Se connecter');
+      }
+    });
+
+    // ── Register form ───────────────────────────────────────────────────────
+    document.getElementById('mobile-register-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name     = document.getElementById('m-reg-name')?.value.trim();
+      const email    = document.getElementById('m-reg-email')?.value.trim();
+      const password = document.getElementById('m-reg-password')?.value;
+      const btn      = document.getElementById('m-register-btn');
+      const errEl    = document.getElementById('m-register-error');
+      Auth._setError(errEl, '');
+      if (password.length < 8) {
+        return Auth._setError(errEl, 'Le mot de passe doit faire au moins 8 caractères.');
+      }
+      Auth._setLoading(btn, true, 'Création du compte...');
+      try {
+        const { token, user, message } = await API.post('/api/auth/register', { name, email, password });
+        App.setAuth(token, user);
+        Toast.success(message || `Bienvenue ${user.name} !`);
+      } catch (err) {
+        Auth._setError(errEl, err.message);
+      } finally {
+        Auth._setLoading(btn, false, 'Créer mon compte →');
+      }
+    });
+  },
 };
+
+window.App = App;
 
 // ─── Landing Page HTML ────────────────────────────────────────────────────────
 function landingHTML() {

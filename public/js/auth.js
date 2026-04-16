@@ -16,16 +16,46 @@ const Auth = {
 
   _openModal(mode) {
     const overlay = document.getElementById('modal-overlay');
-    overlay.classList.remove('hidden');
-    overlay.innerHTML = mode === 'login' ? this._loginHTML() : this._registerHTML();
 
-    // Fermer en cliquant sur l'overlay
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) Auth.closeModal();
+    // Retirer les anciens listeners en remplaçant le noeud (cloneNode)
+    const fresh = overlay.cloneNode(false);
+    overlay.parentNode.replaceChild(fresh, overlay);
+    const ov = document.getElementById('modal-overlay');
+
+    ov.classList.remove('hidden');
+    ov.innerHTML = mode === 'login' ? this._loginHTML() : this._registerHTML();
+
+    // ── Lier les événements via addEventListener (pas d'onclick inline) ──────
+
+    // Bouton fermer
+    ov.querySelector('.modal-close')?.addEventListener('click', () => Auth.closeModal());
+
+    // Formulaire login
+    ov.querySelector('#login-form')?.addEventListener('submit', (e) => Auth.submitLogin(e));
+
+    // Formulaire register
+    ov.querySelector('#register-form')?.addEventListener('submit', (e) => Auth.submitRegister(e));
+
+    // Boutons toggle mot de passe
+    ov.querySelector('#toggle-login-password')?.addEventListener('click', function () {
+      Auth.togglePassword('login-password', this);
+    });
+    ov.querySelector('#toggle-reg-password')?.addEventListener('click', function () {
+      Auth.togglePassword('reg-password', this);
+    });
+
+    // Lien « Créer un compte » / « Se connecter » en bas de modale
+    ov.querySelector('[data-auth-switch]')?.addEventListener('click', () => {
+      mode === 'login' ? Auth.openRegister() : Auth.openLogin();
+    });
+
+    // Fermer en cliquant sur l'overlay (hors modale)
+    ov.addEventListener('click', (e) => {
+      if (e.target === ov) Auth.closeModal();
     });
 
     // Focus premier champ
-    setTimeout(() => overlay.querySelector('input')?.focus(), 100);
+    setTimeout(() => ov.querySelector('input')?.focus(), 100);
   },
 
   closeModal() {
@@ -38,7 +68,7 @@ const Auth = {
   _loginHTML() {
     return `
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="login-title">
-        <button class="modal-close" onclick="Auth.closeModal()" aria-label="Fermer">×</button>
+        <button class="modal-close" type="button" aria-label="Fermer">×</button>
 
         <div class="auth-logo">
           <div class="logo-mark">T</div>
@@ -48,7 +78,7 @@ const Auth = {
         <h2 class="auth-title" id="login-title">Bon retour 👋</h2>
         <p class="auth-sub">Connecte-toi pour voir tes vrais chiffres.</p>
 
-        <form id="login-form" onsubmit="Auth.submitLogin(event)" novalidate>
+        <form id="login-form" novalidate>
           <div class="form-group">
             <label class="form-label" for="login-email">Adresse email</label>
             <input
@@ -71,7 +101,7 @@ const Auth = {
                 autocomplete="current-password"
                 required
               >
-              <button type="button" class="api-key-toggle" onclick="Auth.togglePassword('login-password', this)" aria-label="Afficher le mot de passe">👁</button>
+              <button type="button" id="toggle-login-password" class="api-key-toggle" aria-label="Afficher le mot de passe">👁</button>
             </div>
           </div>
 
@@ -84,7 +114,7 @@ const Auth = {
 
         <div class="auth-switch">
           Pas encore de compte ?
-          <a onclick="Auth.openRegister()">Créer un compte gratuit →</a>
+          <a data-auth-switch style="cursor:pointer">Créer un compte gratuit →</a>
         </div>
       </div>
     `;
@@ -94,7 +124,7 @@ const Auth = {
   _registerHTML() {
     return `
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="register-title">
-        <button class="modal-close" onclick="Auth.closeModal()" aria-label="Fermer">×</button>
+        <button class="modal-close" type="button" aria-label="Fermer">×</button>
 
         <div class="auth-logo">
           <div class="logo-mark">T</div>
@@ -104,7 +134,7 @@ const Auth = {
         <h2 class="auth-title" id="register-title">Commence gratuitement ✨</h2>
         <p class="auth-sub">3 jours d'accès complet. Aucune carte bancaire requise.</p>
 
-        <form id="register-form" onsubmit="Auth.submitRegister(event)" novalidate>
+        <form id="register-form" novalidate>
           <div class="form-group">
             <label class="form-label" for="reg-name">Ton prénom / nom</label>
             <input
@@ -139,7 +169,7 @@ const Auth = {
                 required
                 minlength="8"
               >
-              <button type="button" class="api-key-toggle" onclick="Auth.togglePassword('reg-password', this)" aria-label="Afficher le mot de passe">👁</button>
+              <button type="button" id="toggle-reg-password" class="api-key-toggle" aria-label="Afficher le mot de passe">👁</button>
             </div>
             <p class="form-hint">Au moins 8 caractères.</p>
           </div>
@@ -158,7 +188,7 @@ const Auth = {
 
         <div class="auth-switch">
           Déjà un compte ?
-          <a onclick="Auth.openLogin()">Se connecter</a>
+          <a data-auth-switch style="cursor:pointer">Se connecter</a>
         </div>
       </div>
     `;
@@ -241,5 +271,4 @@ const Auth = {
   },
 };
 
-// Exposer Auth sur window pour compatibilité avec tout contexte d'exécution
 window.Auth = Auth;

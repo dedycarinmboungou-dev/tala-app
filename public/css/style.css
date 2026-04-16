@@ -1569,5 +1569,66 @@ body.theme-light .pwa-ios-banner-close { background: #E5E7EB; color: #6B7280; }
 }
 .pwa-ios-banner-close:hover { background: var(--black-6); color: var(--white); }
 
+/* ─── Modal thème clair (landing page) ───────────────────────────────────────── */
+body.theme-light .modal-overlay {
+  background: rgba(15, 23, 42, 0.55);
+}
+body.theme-light .modal {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  color: #0F172A;
+}
+body.theme-light .modal .auth-title    { color: #0F172A; }
+body.theme-light .modal .auth-sub      { color: #64748B; }
+body.theme-light .modal .auth-logo .logo-name { color: #0F172A; }
+body.theme-light .modal .form-label    { color: #374151; }
+body.theme-light .modal .form-input    { background: #F8FAFC; border-color: #CBD5E1; color: #0F172A; }
+body.theme-light .modal .form-input::placeholder { color: #94A3B8; }
+body.theme-light .modal .form-input:focus { border-color: var(--gold); }
+body.theme-light .modal .form-hint     { color: #6B7280; }
+body.theme-light .modal .auth-switch   { color: #64748B; border-top-color: #E2E8F0; }
+body.theme-light .modal .auth-switch a { color: var(--gold-dark); }
+body.theme-light .modal .modal-close   { color: #6B7280; background: #F1F5F9; }
+body.theme-light .modal .modal-close:hover { background: #E2E8F0; color: #0F172A; }
+body.theme-light .modal .api-key-toggle { color: #6B7280; }
+body.theme-light .modal .divider-text  { color: #9CA3AF; }
+body.theme-light .modal .divider-text::before,
+body.theme-light .modal .divider-text::after { background: #E2E8F0; }
+
+/* ─── Écran auth mobile (PWA / standalone) ────────────────────────────────────── */
+.mobile-auth-screen {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+  background: var(--black);
+}
+.mobile-auth-inner {
+  width: 100%;
+  max-width: 400px;
+}
+.mobile-auth-tabs {
+  display: flex;
+  gap: 0;
+  background: var(--black-3);
+  border: 1px solid var(--black-5);
+  border-radius: var(--radius-full);
+  padding: 4px;
+}
+.mobile-auth-tab {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--gray-400);
+  border-radius: var(--radius-full);
+  transition: all var(--transition);
+}
+.mobile-auth-tab.active {
+  background: var(--gold);
+  color: var(--black);
+}
+
 /* ─── Selection ──────────────────────────────────────────────────────────────── */
 ::selection { background: rgba(245,197,24,0.25); color: var(--white); }

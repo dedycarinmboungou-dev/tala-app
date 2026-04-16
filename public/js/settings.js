@@ -424,3 +424,5 @@ const SettingsView = {
     btn.textContent = label;
   },
 };
+
+window.SettingsView = SettingsView;

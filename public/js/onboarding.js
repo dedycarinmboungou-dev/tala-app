@@ -6,6 +6,7 @@ const Onboarding = {
 
   render() {
     App.state.currentView = 'onboarding';
+    document.body.classList.remove('theme-light'); // ← quitter le thème clair landing
     const step = App.state.user?.onboarding_step || 0;
 
     document.getElementById('app').innerHTML = `
@@ -362,3 +363,5 @@ const Onboarding = {
     btn.classList.toggle('btn-loading', loading);
   },
 };
+
+window.Onboarding = Onboarding;

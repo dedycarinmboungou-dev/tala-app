@@ -518,3 +518,7 @@ const SubsView = {
     }
   },
 };
+
+window.Dashboard  = Dashboard;
+window.CoachView  = CoachView;
+window.SubsView   = SubsView;

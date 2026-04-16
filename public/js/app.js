@@ -103,9 +103,18 @@ const App = {
   },
 
   // ── Auth helpers ──────────────────────────────────────────────────────────
-  setAuth(token, user) {
+  async setAuth(token, user) {
     localStorage.setItem('tala_token', token);
     App.state.user = user;
+    // Charger les données complètes (subscription, connections) après auth
+    try {
+      const data = await API.get('/api/auth/me');
+      App.state.subscription = data.subscription;
+      App.state.connections  = data.connections;
+      if (data.user) App.state.user = data.user;
+    } catch (e) {
+      console.warn('[Tala] setAuth: impossible de charger le profil complet', e);
+    }
     App.route();
   },
 
@@ -135,8 +144,8 @@ function landingHTML() {
           <span class="logo-name">Tala</span>
         </div>
         <div class="navbar-actions">
-          <button class="btn btn-ghost btn-sm" onclick="Auth.openLogin()">Se connecter</button>
-          <button class="btn btn-primary btn-sm" onclick="Auth.openRegister()">Essai gratuit</button>
+          <button class="btn btn-ghost btn-sm" id="btn-login">Se connecter</button>
+          <button class="btn btn-primary btn-sm" data-action="register">Essai gratuit</button>
         </div>
       </div>
     </nav>
@@ -161,7 +170,7 @@ function landingHTML() {
               ton vrai bénéfice net en FCFA — pixel compris.
             </p>
             <div class="hero-ctas">
-              <button class="btn btn-primary btn-lg" onclick="Auth.openRegister()">
+              <button class="btn btn-primary btn-lg" id="btn-register">
                 Commencer gratuitement →
               </button>
               <button class="btn btn-secondary btn-lg" onclick="scrollToFeatures()">
@@ -362,7 +371,7 @@ function landingHTML() {
               <div class="pricing-feature"><span class="check">✓</span> Rapports PDF</div>
               <div class="pricing-feature"><span class="check">✓</span> Alertes intelligentes</div>
             </div>
-            <button class="btn btn-secondary btn-block" onclick="Auth.openRegister()">Commencer gratuitement</button>
+            <button class="btn btn-secondary btn-block" data-action="register">Commencer gratuitement</button>
           </div>
 
           <div class="pricing-card featured">
@@ -378,7 +387,7 @@ function landingHTML() {
               <div class="pricing-feature"><span class="check">✓</span> Résumé hebdo par email</div>
               <div class="pricing-feature"><span class="check">✓</span> Support prioritaire</div>
             </div>
-            <button class="btn btn-primary btn-block" onclick="Auth.openRegister()">Commencer l'essai gratuit →</button>
+            <button class="btn btn-primary btn-block" data-action="register">Commencer l'essai gratuit →</button>
           </div>
 
         </div>
@@ -390,12 +399,21 @@ function landingHTML() {
       <div class="container">
         <h2>Tu mérites de savoir si ta pub est rentable.</h2>
         <p>Rejoins les vendeurs Chariow qui pilotent leurs Meta Ads avec des vraies données.</p>
-        <button class="btn btn-primary btn-lg" onclick="Auth.openRegister()">
+        <button class="btn btn-primary btn-lg" data-action="register">
           Essayer Tala gratuitement →
         </button>
         <p style="margin-top:1rem;font-size:.8125rem;color:var(--gray-500)">3 jours gratuits · Aucune carte requise · Annulable à tout moment</p>
       </div>
     </section>
+
+    <!-- PWA INSTALL BANNER (mobile uniquement, si pas en standalone) -->
+    <div class="pwa-ios-banner" id="pwa-ios-banner" style="display:none">
+      <span class="pwa-ios-banner-text">
+        📱 Installe Tala sur ton téléphone : appuie sur
+        <strong>⬆ Partager</strong> puis <strong>"Sur l'écran d'accueil"</strong>
+      </span>
+      <button class="pwa-ios-banner-close" aria-label="Fermer" onclick="document.getElementById('pwa-ios-banner').style.display='none'">×</button>
+    </div>
 
     <!-- FOOTER -->
     <footer class="footer">
@@ -418,15 +436,65 @@ function landingHTML() {
 }
 
 function bindLandingEvents() {
-  // Smooth scroll to features
+  console.log('[Tala] bindLandingEvents() — DOM rendu, attachement des listeners');
+
+  // ── CTA principal : "Commencer gratuitement" (hero) ──────────────────────
+  const btnRegister = document.getElementById('btn-register');
+  if (btnRegister) {
+    btnRegister.addEventListener('click', () => {
+      console.log('[Tala] 🖱 Clic btn-register (hero)');
+      Auth.openRegister();
+    });
+    console.log('[Tala] ✅ Listener attaché → #btn-register');
+  } else {
+    console.warn('[Tala] ⚠️ #btn-register introuvable dans le DOM');
+  }
+
+  // ── CTA principal : "Se connecter" (navbar) ──────────────────────────────
+  const btnLogin = document.getElementById('btn-login');
+  if (btnLogin) {
+    btnLogin.addEventListener('click', () => {
+      console.log('[Tala] 🖱 Clic btn-login (navbar)');
+      Auth.openLogin();
+    });
+    console.log('[Tala] ✅ Listener attaché → #btn-login');
+  } else {
+    console.warn('[Tala] ⚠️ #btn-login introuvable dans le DOM');
+  }
+
+  // ── Autres boutons "register" (pricing, CTA section…) ────────────────────
+  const registerBtns = document.querySelectorAll('[data-action="register"]');
+  registerBtns.forEach((btn, i) => {
+    btn.addEventListener('click', () => {
+      console.log(`[Tala] 🖱 Clic data-action=register [${i}] "${btn.textContent.trim()}"`);
+      Auth.openRegister();
+    });
+    console.log(`[Tala] ✅ Listener attaché → data-action=register[${i}]`);
+  });
+
+  // ── Scroll vers les fonctionnalités ──────────────────────────────────────
   window.scrollToFeatures = () => {
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Navbar scroll effect
+  // ── Navbar scroll effect ──────────────────────────────────────────────────
   window.addEventListener('scroll', () => {
     document.querySelector('.navbar')?.classList.toggle('scrolled', window.scrollY > 10);
   }, { passive: true });
+
+  // ── Bannière PWA iOS (mobile, hors standalone) ────────────────────────────
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                    || window.navigator.standalone === true;
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const banner = document.getElementById('pwa-ios-banner');
+  if (banner) {
+    if (isMobile && !isStandalone) {
+      banner.style.display = 'flex';
+      console.log('[Tala] 📱 Bannière PWA iOS affichée');
+    } else {
+      console.log(`[Tala] 📱 Bannière PWA masquée (mobile:${isMobile}, standalone:${isStandalone})`);
+    }
+  }
 }
 
 // ─── Stub page renderers (à compléter dans les autres fichiers JS) ─────────────
@@ -739,4 +807,7 @@ const Toast = {
 };
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => App.init());
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('[Tala] DOMContentLoaded — app starting...');
+  App.init();
+});

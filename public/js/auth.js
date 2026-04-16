@@ -240,3 +240,6 @@ const Auth = {
     btn.classList.toggle('btn-loading', loading);
   },
 };
+
+// Exposer Auth sur window pour compatibilité avec tout contexte d'exécution
+window.Auth = Auth;

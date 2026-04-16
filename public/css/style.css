@@ -1352,5 +1352,50 @@ h4 { font-size: 1.125rem; font-weight: 600; }
 .btn-pwa-install.visible { display: flex; }
 @media (hover: hover) { .btn-pwa-install:hover { background: rgba(245,197,24,.18); } }
 
+/* ─── PWA iOS Install Banner ─────────────────────────────────────────────────── */
+.pwa-ios-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  background: var(--black-3);
+  border-top: 1px solid var(--gold-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  /* Uniquement sur mobile */
+  display: none;
+}
+@media (max-width: 768px) {
+  .pwa-ios-banner { display: flex; }
+}
+.pwa-ios-banner-text {
+  font-size: 0.8125rem;
+  color: var(--gray-300);
+  line-height: 1.5;
+  flex: 1;
+}
+.pwa-ios-banner-text strong { color: var(--gold); font-weight: 700; }
+.pwa-ios-banner-close {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--black-5);
+  border-radius: var(--radius-full);
+  color: var(--gray-400);
+  font-size: 1.125rem;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.pwa-ios-banner-close:hover { background: var(--black-6); color: var(--white); }
+
 /* ─── Selection ──────────────────────────────────────────────────────────────── */
 ::selection { background: rgba(245,197,24,0.25); color: var(--white); }

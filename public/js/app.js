@@ -128,6 +128,7 @@ const App = {
   // ── Landing ───────────────────────────────────────────────────────────────
   renderLanding() {
     App.state.currentView = 'landing';
+    document.body.classList.add('theme-light');
     document.getElementById('app').innerHTML = landingHTML();
     bindLandingEvents();
   },
@@ -679,6 +680,7 @@ async function renderAdminPage() {
 
 // ─── App Shell (nav + content) ────────────────────────────────────────────────
 function renderAppShell(activeNav, content) {
+  document.body.classList.remove('theme-light');
   const u   = App.state.user;
   const sub = App.state.subscription;
   const initials = u?.name?.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?';

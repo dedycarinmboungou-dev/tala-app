@@ -1352,6 +1352,174 @@ h4 { font-size: 1.125rem; font-weight: 600; }
 .btn-pwa-install.visible { display: flex; }
 @media (hover: hover) { .btn-pwa-install:hover { background: rgba(245,197,24,.18); } }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   LANDING — THÈME CLAIR (body.theme-light)
+   Surcharge complète du dark theme uniquement pour la landing page.
+   L'app connectée (dashboard, etc.) garde le dark theme.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+body.theme-light {
+  background: #FFFFFF;
+  color: #0F172A;
+}
+
+/* ── Navbar ────────────────────────────────────────────────────────────────── */
+body.theme-light .navbar {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid #E2E8F0;
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.06);
+}
+body.theme-light .navbar.scrolled {
+  background: rgba(255, 255, 255, 0.97);
+  border-bottom-color: #CBD5E1;
+}
+body.theme-light .logo-name { color: #0F172A; }
+
+body.theme-light .btn-ghost {
+  color: #374151;
+  border: 1px solid #D1D5DB;
+}
+body.theme-light .btn-ghost:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+body.theme-light .btn-secondary {
+  background: #F1F5F9;
+  color: #374151;
+  border-color: #E2E8F0;
+}
+body.theme-light .btn-secondary:hover {
+  background: #E2E8F0;
+  border-color: #CBD5E1;
+}
+
+/* ── Hero ──────────────────────────────────────────────────────────────────── */
+body.theme-light .hero {
+  background: linear-gradient(150deg, #FAFBFF 0%, #F0F4FF 40%, #FFFBEB 100%);
+}
+body.theme-light .hero-bg {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% -5%, rgba(245,197,24,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 30% at 80% 80%, rgba(99,102,241,0.06) 0%, transparent 60%);
+}
+body.theme-light .hero-sub {
+  color: #475569;
+}
+body.theme-light .hero-stat-value {
+  color: #0F172A;
+}
+body.theme-light .hero-stat-label {
+  color: #64748B;
+}
+
+/* ── Phone mockup / dashboard preview ─────────────────────────────────────── */
+body.theme-light .phone-mockup-frame {
+  background: #1A1A2E;
+  box-shadow: 0 24px 80px rgba(15,23,42,0.25), 0 0 0 1px rgba(0,0,0,0.08);
+}
+/* Le mockup reste sombre pour contraste avec le fond clair — intentionnel */
+
+/* ── Hero stats séparateur ─────────────────────────────────────────────────── */
+body.theme-light .hero-stats {
+  border-top: 1px solid #E2E8F0;
+  padding-top: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+/* ── Problem section ───────────────────────────────────────────────────────── */
+body.theme-light .problem-section {
+  background: #F8FAFC;
+  border-top: 1px solid #E2E8F0;
+  border-bottom: 1px solid #E2E8F0;
+}
+body.theme-light .problem-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-left: 3px solid #EF4444;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+body.theme-light .problem-card h4 { color: #0F172A; }
+body.theme-light .problem-card p  { color: #64748B; }
+
+/* ── Section typography ────────────────────────────────────────────────────── */
+body.theme-light .section-sub { color: #64748B; }
+body.theme-light h2 { color: #0F172A; }
+body.theme-light h3 { color: #0F172A; }
+body.theme-light h4 { color: #1E293B; }
+
+/* ── Features section ──────────────────────────────────────────────────────── */
+body.theme-light .feature-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+body.theme-light .feature-card:hover {
+  border-color: var(--gold-border);
+  box-shadow: 0 8px 30px rgba(245,197,24,0.15);
+}
+body.theme-light .feature-card p { color: #64748B; }
+
+/* ── How it works section ──────────────────────────────────────────────────── */
+body.theme-light .section[style*="background:var(--black-2)"],
+body.theme-light [style*="background:var(--black-2)"] {
+  background: #F1F5F9 !important;
+  border-top: 1px solid #E2E8F0 !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+}
+body.theme-light .step-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+body.theme-light .step-card h4 { color: #0F172A; }
+body.theme-light .step-card p  { color: #64748B; }
+
+/* ── Pricing section ───────────────────────────────────────────────────────── */
+body.theme-light .pricing-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+body.theme-light .pricing-card.featured {
+  border-color: var(--gold-border);
+  background: linear-gradient(180deg, rgba(245,197,24,0.04) 0%, #FFFFFF 100%);
+  box-shadow: 0 8px 40px rgba(245,197,24,0.18);
+}
+body.theme-light .pricing-plan  { color: #6B7280; }
+body.theme-light .pricing-price { color: #0F172A; }
+body.theme-light .pricing-price span { color: #9CA3AF; }
+body.theme-light .pricing-desc  { color: #6B7280; border-bottom-color: #E5E7EB; }
+body.theme-light .pricing-feature {
+  color: #374151;
+  border-bottom-color: #F3F4F6;
+}
+
+/* ── CTA section ────────────────────────────────────────────────────────────── */
+body.theme-light .cta-section {
+  background: linear-gradient(135deg, #F0F4FF 0%, #FFFBEB 100%);
+}
+body.theme-light .cta-section h2 { color: #0F172A; }
+body.theme-light .cta-section p  { color: #475569; }
+
+/* ── Footer ─────────────────────────────────────────────────────────────────── */
+body.theme-light .footer {
+  background: #F8FAFC;
+  border-top: 1px solid #E2E8F0;
+}
+body.theme-light .footer-copy { color: #6B7280; }
+body.theme-light .footer-links a { color: #6B7280; }
+body.theme-light .footer-links a:hover { color: var(--gold-dark); }
+body.theme-light .logo-name { color: #0F172A; }
+
+/* ── Bannière PWA en thème clair ────────────────────────────────────────────── */
+body.theme-light .pwa-ios-banner {
+  background: rgba(248, 250, 252, 0.95);
+  border-top-color: #E2E8F0;
+}
+body.theme-light .pwa-ios-banner-text { color: #374151; }
+body.theme-light .pwa-ios-banner-close { background: #E5E7EB; color: #6B7280; }
+
 /* ─── PWA iOS Install Banner ─────────────────────────────────────────────────── */
 .pwa-ios-banner {
   position: fixed;

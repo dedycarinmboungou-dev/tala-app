@@ -101,4 +101,22 @@ router.get('/stats', requireAuth, requireAdmin, (req, res) => {
   });
 });
 
+// ─── DELETE /api/admin/zombie-users ──────────────────────────────────────────
+// Supprime les comptes créés mais jamais finalisés (onboarding non démarré,
+// inscription qui a échoué côté client après insert en base).
+router.delete('/zombie-users', requireAuth, requireAdmin, (req, res) => {
+  // Comptes avec onboarding_step=0, onboarding_completed=0, créés il y a + de 10 min
+  const result = db.prepare(`
+    DELETE FROM users
+    WHERE onboarding_step = 0
+      AND onboarding_completed = 0
+      AND created_at < datetime('now', '-10 minutes')
+  `).run();
+
+  res.json({
+    message: `${result.changes} compte(s) fantôme(s) supprimé(s).`,
+    deleted: result.changes,
+  });
+});
+
 module.exports = { router, requireAdmin };

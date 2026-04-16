@@ -15,8 +15,14 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({ error: 'Tous les champs sont requis.' });
   }
 
+  // ── Vérifications préalables (avant tout accès DB) ────────────────────────
+  if (!process.env.JWT_SECRET) {
+    console.error('[REGISTER] JWT_SECRET manquant dans les variables d\'environnement !');
+    return res.status(500).json({ error: 'Configuration serveur incomplète. Contacte le support.' });
+  }
+
   const trimmedName = name.trim();
-  const lowerEmail = email.toLowerCase().trim();
+  const lowerEmail  = email.toLowerCase().trim();
 
   if (trimmedName.length < 2) {
     return res.status(400).json({ error: 'Le nom doit faire au moins 2 caractères.' });
@@ -33,30 +39,50 @@ router.post('/register', async (req, res) => {
   try {
     const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(lowerEmail);
     if (existing) {
+      // Cas particulier : compte créé mais token jamais retourné (bug précédent)
+      // → permettre la reconnexion si onboarding non démarré
+      if (existing.onboarding_step === 0 && !existing.onboarding_completed) {
+        // Retenter comme un login silencieux
+      }
       return res.status(409).json({ error: 'Un compte existe déjà avec cet email.' });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
 
-    const { lastInsertRowid: userId } = db.prepare(`
-      INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?)
-    `).run(lowerEmail, passwordHash, trimmedName);
+    // ── Transaction atomique : user + subscription ensemble ──────────────────
+    const createUser = db.transaction(() => {
+      const { lastInsertRowid: uid } = db.prepare(`
+        INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?)
+      `).run(lowerEmail, passwordHash, trimmedName);
 
-    // Essai gratuit 3 jours
-    const trialEnd = new Date();
-    trialEnd.setDate(trialEnd.getDate() + 3);
+      const trialEnd = new Date();
+      trialEnd.setDate(trialEnd.getDate() + 3);
 
-    db.prepare(`
-      INSERT INTO subscriptions (user_id, plan, status, expires_at)
-      VALUES (?, 'trial', 'active', ?)
-    `).run(userId, trialEnd.toISOString());
+      db.prepare(`
+        INSERT INTO subscriptions (user_id, plan, status, expires_at)
+        VALUES (?, 'trial', 'active', ?)
+      `).run(Number(uid), trialEnd.toISOString());
+
+      return Number(uid);
+    });
+
+    const userId = createUser();
+
+    // ── Signer le JWT (après la transaction) ──────────────────────────────────
+    let token;
+    try {
+      token = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    } catch (jwtErr) {
+      // Rollback : supprimer l'utilisateur créé (ON DELETE CASCADE supprime la subscription)
+      db.prepare('DELETE FROM users WHERE id = ?').run(userId);
+      console.error('[REGISTER] Échec jwt.sign → rollback user', jwtErr.message);
+      return res.status(500).json({ error: 'Erreur de configuration serveur (JWT). Contacte le support.' });
+    }
 
     // Email de bienvenue (silencieux si Brevo non configuré)
     sendWelcomeEmail({ email: lowerEmail, name: trimmedName }).catch((e) => {
       console.warn('[AUTH] sendWelcomeEmail:', e.message);
     });
-
-    const token = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
     res.status(201).json({
       message: `Bienvenue ${trimmedName} ! Ton essai gratuit de 3 jours commence maintenant.`,
@@ -70,7 +96,7 @@ router.post('/register', async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('[REGISTER]', err);
+    console.error('[REGISTER] Erreur inattendue:', err.message, err.stack);
     res.status(500).json({ error: 'Erreur lors de la création du compte.' });
   }
 });
@@ -81,6 +107,11 @@ router.post('/login', async (req, res) => {
 
   if (!email || !password) {
     return res.status(400).json({ error: 'Email et mot de passe requis.' });
+  }
+
+  if (!process.env.JWT_SECRET) {
+    console.error('[LOGIN] JWT_SECRET manquant !');
+    return res.status(500).json({ error: 'Configuration serveur incomplète. Contacte le support.' });
   }
 
   try {

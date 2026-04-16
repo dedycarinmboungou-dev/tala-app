@@ -6,7 +6,8 @@ const Onboarding = {
 
   render() {
     App.state.currentView = 'onboarding';
-    document.body.classList.remove('theme-light'); // ← quitter le thème clair landing
+    document.body.classList.add('theme-light'); // thème clair partout
+
     const step = App.state.user?.onboarding_step || 0;
 
     document.getElementById('app').innerHTML = `
@@ -18,7 +19,7 @@ const Onboarding = {
             <div class="logo-mark">T</div>
             <span class="logo-name">Tala</span>
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="App.logout()">Se déconnecter</button>
+          <button class="btn btn-ghost btn-sm" id="onboarding-logout">Se déconnecter</button>
         </div>
 
         <!-- Body -->
@@ -30,6 +31,51 @@ const Onboarding = {
 
       </div>
     `;
+
+    // Bouton déconnexion (header)
+    document.getElementById('onboarding-logout')
+      ?.addEventListener('click', () => App.logout());
+
+    // Lier les boutons du step courant
+    this._bindStep(step);
+  },
+
+  // ── Binding des boutons par step ────────────────────────────────────────────
+  _bindStep(step) {
+    switch (step) {
+      case 0:
+        document.getElementById('step1-btn')
+          ?.addEventListener('click', () => Onboarding.submitStep1());
+        document.getElementById('toggle-chariow-key')
+          ?.addEventListener('click', function () {
+            Auth.togglePassword('chariow-key', this);
+          });
+        break;
+
+      case 1:
+        document.getElementById('continue-meta-btn')
+          ?.addEventListener('click', () => Onboarding.submitStep2());
+        document.getElementById('connect-meta-btn')
+          ?.addEventListener('click', () => Onboarding.connectMeta());
+        document.getElementById('skip-meta-btn')
+          ?.addEventListener('click', () => Onboarding.skipMeta());
+        break;
+
+      case 2:
+        document.getElementById('step3-btn')
+          ?.addEventListener('click', () => Onboarding.submitStep3());
+        document.getElementById('skip-step3-btn')
+          ?.addEventListener('click', () => Onboarding.submitStep3(true));
+        document.getElementById('add-sub-btn')
+          ?.addEventListener('click', () => Onboarding.addSub());
+        break;
+    }
+  },
+
+  // ── Mettre à jour la carte + rebind ────────────────────────────────────────
+  _updateCard(step) {
+    document.getElementById('onboarding-card').innerHTML = this._renderStep(step);
+    this._bindStep(step);
   },
 
   _stepIndicator(current) {
@@ -71,7 +117,7 @@ const Onboarding = {
             autocomplete="off"
             spellcheck="false"
           >
-          <button type="button" class="api-key-toggle" onclick="Auth.togglePassword('chariow-key', this)" aria-label="Afficher la clé">👁</button>
+          <button type="button" id="toggle-chariow-key" class="api-key-toggle" aria-label="Afficher la clé">👁</button>
         </div>
         <p class="form-hint">
           Trouve ta clé dans <strong>Chariow → Paramètres → API</strong>.
@@ -80,7 +126,7 @@ const Onboarding = {
 
       <div id="step1-error" class="form-hint error hidden"></div>
 
-      <button class="btn btn-primary btn-block mt-4" id="step1-btn" onclick="Onboarding.submitStep1()">
+      <button class="btn btn-primary btn-block mt-4" id="step1-btn">
         Vérifier et continuer →
       </button>
     `;
@@ -102,7 +148,7 @@ const Onboarding = {
             Compte Meta connecté : <strong>${conn.ad_account_name || conn.ad_account_id}</strong>
           </div>
         </div>
-        <button class="btn btn-primary btn-block" onclick="Onboarding.submitStep2()">Continuer →</button>
+        <button class="btn btn-primary btn-block" id="continue-meta-btn">Continuer →</button>
       ` : `
         <div class="card" style="margin-bottom:1.25rem">
           <p style="font-size:.875rem;color:var(--gray-400);margin-bottom:1rem">
@@ -114,11 +160,11 @@ const Onboarding = {
             <li>✓ Révocable à tout moment</li>
           </ul>
         </div>
-        <button class="btn btn-primary btn-block" onclick="Onboarding.connectMeta()">
+        <button class="btn btn-primary btn-block" id="connect-meta-btn">
           Se connecter avec Facebook →
         </button>
         <div class="divider-text mt-4">ou</div>
-        <button class="btn btn-ghost btn-block" onclick="Onboarding.skipMeta()" style="margin-top:.75rem">
+        <button class="btn btn-ghost btn-block" id="skip-meta-btn" style="margin-top:.75rem">
           Passer cette étape (configurer plus tard)
         </button>
       `}
@@ -146,15 +192,15 @@ const Onboarding = {
             <input type="number" class="form-input" id="sub-amount" placeholder="5000" style="width:130px">
           </div>
         </div>
-        <button class="btn btn-secondary btn-sm mt-3" onclick="Onboarding.addSub()">+ Ajouter</button>
+        <button class="btn btn-secondary btn-sm mt-3" id="add-sub-btn">+ Ajouter</button>
       </div>
 
       <div id="step3-error" class="form-hint error hidden"></div>
 
-      <button class="btn btn-primary btn-block mt-2" id="step3-btn" onclick="Onboarding.submitStep3()">
+      <button class="btn btn-primary btn-block mt-2" id="step3-btn">
         Terminer la configuration →
       </button>
-      <button class="btn btn-ghost btn-block mt-2" onclick="Onboarding.submitStep3(true)">
+      <button class="btn btn-ghost btn-block mt-2" id="skip-step3-btn">
         Passer — je configurerai ça plus tard
       </button>
     `;
@@ -162,8 +208,8 @@ const Onboarding = {
 
   // ── Logique étape 1 ───────────────────────────────────────────────────────
   async submitStep1() {
-    const key = document.getElementById('chariow-key')?.value.trim();
-    const btn = document.getElementById('step1-btn');
+    const key   = document.getElementById('chariow-key')?.value.trim();
+    const btn   = document.getElementById('step1-btn');
     const errEl = document.getElementById('step1-error');
 
     if (!key) {
@@ -175,7 +221,7 @@ const Onboarding = {
     try {
       await API.post('/api/onboarding/chariow', { api_key: key });
       App.state.user.onboarding_step = 1;
-      document.getElementById('onboarding-card').innerHTML = this._renderStep(1);
+      this._updateCard(1);
     } catch (err) {
       this._setError(errEl, err.message || 'Clé API invalide ou store introuvable.');
     } finally {
@@ -186,13 +232,9 @@ const Onboarding = {
   // ── Logique étape 2 ───────────────────────────────────────────────────────
   async connectMeta() {
     try {
-      // 1. Récupérer l'URL OAuth depuis le backend
       const { url } = await API.get('/api/meta/oauth/url');
+      const popup   = window.open(url, 'meta_auth', 'width=600,height=700');
 
-      // 2. Ouvrir la popup Meta
-      const popup = window.open(url, 'meta_auth', 'width=600,height=700');
-
-      // 3. Écouter le postMessage envoyé par le callback
       const handler = async (e) => {
         if (e.data?.type !== 'META_AUTH_SUCCESS') return;
         window.removeEventListener('message', handler);
@@ -201,7 +243,6 @@ const Onboarding = {
       };
       window.addEventListener('message', handler);
 
-      // Nettoyage si l'utilisateur ferme la popup sans finaliser
       const closedCheck = setInterval(() => {
         if (popup?.closed) {
           clearInterval(closedCheck);
@@ -221,17 +262,18 @@ const Onboarding = {
       if (!accounts?.length) {
         Toast.info('Connecté ! Aucun compte pub trouvé — tu pourras en configurer un plus tard.');
         App.state.connections.meta = { connected: true };
-        document.getElementById('onboarding-card').innerHTML = this._renderStep(1);
+        this._updateCard(1);
         return;
       }
 
       if (accounts.length === 1) {
         await API.post('/api/meta/select-account', { account_id: accounts[0].id });
         App.state.connections.meta = { ad_account_id: accounts[0].id, ad_account_name: accounts[0].name };
-        document.getElementById('onboarding-card').innerHTML = this._renderStep(1);
+        this._updateCard(1);
         Toast.success(`Compte "${accounts[0].name}" sélectionné !`);
       } else {
         document.getElementById('onboarding-card').innerHTML = this._accountSelectorHTML(accounts);
+        // _accountSelectorHTML uses onclick="Onboarding.selectMetaAccount(...)" — window.Onboarding is set
       }
     } catch (err) {
       Toast.error(err.message || 'Erreur après connexion Meta.');
@@ -259,7 +301,7 @@ const Onboarding = {
     try {
       await API.post('/api/meta/select-account', { account_id: accountId });
       App.state.connections.meta = { ad_account_id: accountId, ad_account_name: accountName };
-      document.getElementById('onboarding-card').innerHTML = this._renderStep(1);
+      this._updateCard(1);
       Toast.success(`Compte "${accountName}" sélectionné !`);
     } catch (err) {
       Toast.error(err.message || 'Erreur lors de la sélection du compte.');
@@ -275,7 +317,7 @@ const Onboarding = {
       await API.post('/api/onboarding/step', { step: 2 });
       App.state.user.onboarding_step = 2;
       this._localSubs = [];
-      document.getElementById('onboarding-card').innerHTML = this._renderStep(2);
+      this._updateCard(2);
       this._renderSubsList();
     } catch (err) {
       Toast.error(err.message);
@@ -309,9 +351,9 @@ const Onboarding = {
     el.innerHTML = this._localSubs.map((s, i) => `
       <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:.875rem 1rem;margin-bottom:.5rem">
         <div>
-          <span style="font-weight:700;color:var(--white)">${s.name}</span>
+          <span style="font-weight:700">${s.name}</span>
           <span style="color:var(--gold);font-weight:700;margin-left:.75rem">${formatXOF(s.amount)}</span>
-          <span style="color:var(--gray-500);font-size:.8125rem">/mois</span>
+          <span style="font-size:.8125rem;margin-left:.25rem">/mois</span>
         </div>
         <button class="btn btn-ghost btn-sm" onclick="Onboarding.removeSub(${i})" style="color:var(--danger)">✕</button>
       </div>
@@ -329,7 +371,7 @@ const Onboarding = {
   },
 
   async submitStep3(skip = false) {
-    const btn = document.getElementById('step3-btn');
+    const btn   = document.getElementById('step3-btn');
     const errEl = document.getElementById('step3-error');
     this._setError(errEl, '');
     this._setLoading(btn, true, 'Finalisation...');
@@ -358,7 +400,7 @@ const Onboarding = {
 
   _setLoading(btn, loading, label) {
     if (!btn) return;
-    btn.disabled = loading;
+    btn.disabled    = loading;
     btn.textContent = label;
     btn.classList.toggle('btn-loading', loading);
   },

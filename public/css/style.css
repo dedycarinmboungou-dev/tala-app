@@ -1646,5 +1646,36 @@ body.theme-light .mobile-auth-tab.active {
   color: #FFFFFF;
 }
 
+/* ─── Onboarding – light theme overrides ─────────────────────────────────────── */
+body.theme-light .onboarding-page {
+  background: #F8FAFC;
+}
+body.theme-light .onboarding-header {
+  background: #FFFFFF;
+  border-bottom-color: #E2E8F0;
+}
+body.theme-light .onboarding-card {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  color: #0F172A;
+}
+body.theme-light .onboarding-card h2 {
+  color: #0F172A;
+}
+body.theme-light .onboarding-card > p {
+  color: #64748B;
+}
+body.theme-light .step-dot {
+  background: #CBD5E1;
+}
+body.theme-light .text-muted {
+  color: #64748B;
+}
+body.theme-light .form-label  { color: #374151; }
+body.theme-light .form-input  { background: #F8FAFC; border-color: #CBD5E1; color: #0F172A; }
+body.theme-light .form-input::placeholder { color: #94A3B8; }
+body.theme-light .form-hint   { color: #64748B; }
+body.theme-light .card        { background: #FFFFFF; border-color: #E2E8F0; }
+
 /* ─── Selection ──────────────────────────────────────────────────────────────── */
 ::selection { background: rgba(245,197,24,0.25); color: var(--white); }
